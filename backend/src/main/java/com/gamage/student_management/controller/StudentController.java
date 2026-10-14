@@ -1,7 +1,9 @@
 package com.gamage.student_management.controller;
 
-import com.gamage.student_management.entity.Student;
+import com.gamage.student_management.dto.student.StudentRequest;
+import com.gamage.student_management.dto.student.StudentResponse;
 import com.gamage.student_management.service.StudentService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -18,24 +20,24 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<Student> getAll() {
+    public List<StudentResponse> getAll() {
         return service.getAll();
     }
 
     @GetMapping("/{id}")
-    public Student getById(@PathVariable Long id) {
+    public StudentResponse getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Student create(@RequestBody Student student) {
-        return service.create(student);
+    public StudentResponse create(@Valid @RequestBody StudentRequest request) {
+        return service.create(request);
     }
 
     @PutMapping("/{id}")
-    public Student update(@PathVariable Long id, @RequestBody Student student) {
-        return service.update(id, student);
+    public StudentResponse update(@PathVariable Long id, @Valid @RequestBody StudentRequest request) {
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")

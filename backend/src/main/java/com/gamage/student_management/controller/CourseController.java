@@ -1,7 +1,9 @@
 package com.gamage.student_management.controller;
 
-import com.gamage.student_management.entity.Course;
+import com.gamage.student_management.dto.course.CourseRequest;
+import com.gamage.student_management.dto.course.CourseResponse;
 import com.gamage.student_management.service.CourseService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -18,24 +20,24 @@ public class CourseController {
     }
 
     @GetMapping
-    public List<Course> getAll() {
+    public List<CourseResponse> getAll() {
         return service.getAll();
     }
 
     @GetMapping("/{id}")
-    public Course getById(@PathVariable Long id) {
+    public CourseResponse getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Course create(@RequestBody Course course) {
-        return service.create(course);
+    public CourseResponse create(@Valid @RequestBody CourseRequest request) {
+        return service.create(request);
     }
 
     @PutMapping("/{id}")
-    public Course update(@PathVariable Long id, @RequestBody Course course) {
-        return service.update(id, course);
+    public CourseResponse update(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")

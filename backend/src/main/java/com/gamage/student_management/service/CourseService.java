@@ -1,5 +1,7 @@
 package com.gamage.student_management.service;
 
+import com.gamage.student_management.dto.course.CourseRequest;
+import com.gamage.student_management.dto.course.CourseResponse;
 import com.gamage.student_management.entity.Course;
 import com.gamage.student_management.repository.CourseRepository;
 import org.springframework.http.HttpStatus;
@@ -16,34 +18,43 @@ public class CourseService {
         this.repository = repository;
     }
 
-    public List<Course> getAll() {
-        return repository.findAll();
+    public List<CourseResponse> getAll() {
+        return repository.findAll().stream().map(CourseResponse::from).toList();
     }
 
-    public Course getById(Long id) {
+    public CourseResponse getById(Long id) {
+        return CourseResponse.from(findEntity(id));
+    }
+
+    public CourseResponse create(CourseRequest req) {
+        if (repository.existsByCourseCode(req.courseCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Course code already exists");
+        }
+        Course course = new Course();
+        apply(course, req);
+        return CourseResponse.from(repository.save(course));
+    }
+
+    public CourseResponse update(Long id, CourseRequest req) {
+        Course course = findEntity(id);
+        apply(course, req);
+        return CourseResponse.from(repository.save(course));
+    }
+
+    public void delete(Long id) {
+        findEntity(id);
+        repository.deleteById(id);
+    }
+
+    private Course findEntity(Long id) {
         return repository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + id));
     }
 
-    public Course create(Course course) {
-        if (repository.existsByCourseCode(course.getCourseCode())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Course code already exists");
-        }
-        course.setId(null);
-        return repository.save(course);
-    }
-
-    public Course update(Long id, Course updated) {
-        Course existing = getById(id);
-        existing.setCourseCode(updated.getCourseCode());
-        existing.setTitle(updated.getTitle());
-        existing.setDescription(updated.getDescription());
-        existing.setCredits(updated.getCredits());
-        return repository.save(existing);
-    }
-
-    public void delete(Long id) {
-        getById(id);
-        repository.deleteById(id);
+    private void apply(Course course, CourseRequest req) {
+        course.setCourseCode(req.courseCode());
+        course.setTitle(req.title());
+        course.setDescription(req.description());
+        course.setCredits(req.credits());
     }
 }
