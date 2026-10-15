@@ -1,4 +1,4 @@
-package com.gamage.student_management.dto.course;
+package com.gamage.student_management.dto.response;
 
 import com.gamage.student_management.entity.Course;
 

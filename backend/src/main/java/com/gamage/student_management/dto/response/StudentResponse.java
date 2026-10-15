@@ -1,4 +1,4 @@
-package com.gamage.student_management.dto.student;
+package com.gamage.student_management.dto.response;
 
 import com.gamage.student_management.entity.Student;
 import java.time.LocalDate;

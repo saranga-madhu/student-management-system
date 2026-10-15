@@ -1,7 +1,7 @@
 package com.gamage.student_management.service;
 
-import com.gamage.student_management.dto.course.CourseRequest;
-import com.gamage.student_management.dto.course.CourseResponse;
+import com.gamage.student_management.dto.request.CourseRequest;
+import com.gamage.student_management.dto.response.CourseResponse;
 import com.gamage.student_management.entity.Course;
 import com.gamage.student_management.repository.CourseRepository;
 import org.springframework.http.HttpStatus;

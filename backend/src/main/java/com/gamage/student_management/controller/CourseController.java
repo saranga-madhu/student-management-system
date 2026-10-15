@@ -1,7 +1,7 @@
 package com.gamage.student_management.controller;
 
-import com.gamage.student_management.dto.course.CourseRequest;
-import com.gamage.student_management.dto.course.CourseResponse;
+import com.gamage.student_management.dto.request.CourseRequest;
+import com.gamage.student_management.dto.response.CourseResponse;
 import com.gamage.student_management.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

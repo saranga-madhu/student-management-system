@@ -1,7 +1,7 @@
 package com.gamage.student_management.controller;
 
-import com.gamage.student_management.dto.student.StudentRequest;
-import com.gamage.student_management.dto.student.StudentResponse;
+import com.gamage.student_management.dto.request.StudentRequest;
+import com.gamage.student_management.dto.response.StudentResponse;
 import com.gamage.student_management.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

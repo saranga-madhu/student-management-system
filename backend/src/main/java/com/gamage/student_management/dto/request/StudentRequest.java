@@ -1,4 +1,4 @@
-package com.gamage.student_management.dto.student;
+package com.gamage.student_management.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

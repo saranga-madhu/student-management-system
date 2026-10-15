@@ -1,4 +1,4 @@
-package com.gamage.student_management.dto.course;
+package com.gamage.student_management.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
