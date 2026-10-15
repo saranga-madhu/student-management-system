@@ -1,21 +1,48 @@
 import axios from "axios";
 
+export const TOKEN_KEY = "sms_token";
+export const USER_KEY = "sms_user";
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api",
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
 });
+
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status;
+    const url: string = error?.config?.url ?? "";
+    const isAuthCall = url.includes("/auth/login") || url.includes("/auth/register");
+
+    if (status === 401 && !isAuthCall && typeof window !== "undefined") {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export function getErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     if (err.response) {
-      return err.response.data?.message ?? `Request failed (status ${err.response.status})`;
+      const data = err.response.data as { message?: string } | undefined;
+      return data?.message || `Request failed (status ${err.response.status})`;
     }
-    if (err.request) {
-      return "Cannot reach the server. Is the backend running?";
-    }
+    return "Cannot reach the server. Is the backend running?";
   }
-  return "Something went wrong. Please try again.";
+  return "Something went wrong";
 }
 
 export default api;
