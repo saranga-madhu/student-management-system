@@ -1,11 +1,14 @@
 package com.gamage.student_management.controller;
 
+import com.gamage.student_management.dto.request.LoginRequest;
 import com.gamage.student_management.dto.request.RegisterRequest;
+import com.gamage.student_management.dto.response.AuthResponse;
 import com.gamage.student_management.dto.response.UserResponse;
 import com.gamage.student_management.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,5 +23,15 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
+    }
+
+    @GetMapping("/me")
+    public UserResponse me(Authentication authentication) {
+        return authService.getByUsername(authentication.getName());
     }
 }
