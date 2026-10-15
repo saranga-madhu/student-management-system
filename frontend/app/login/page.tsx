@@ -1,44 +1,72 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { GraduationCap } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useMessages } from "@/context/MessageContext";
+import { getErrorMessage } from "@/lib/api";
+import { card, inputClass, primaryBtn } from "@/lib/theme";
+import Field from "@/components/Field";
 
 export default function LoginPage() {
+  const { user, ready, login } = useAuth();
+  const messages = useMessages();
+  const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [notice, setNotice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  useEffect(() => {
+    if (ready && user) router.replace("/dashboard");
+  }, [ready, user, router]);
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    // TODO (Day 4): call POST /api/auth/login and store the JWT token
-    setNotice("Login is not connected to the backend yet. Authentication (JWT) will be added.");
+    setSubmitting(true);
+    try {
+      const loggedIn = await login(username.trim(), password);
+      messages.success(`Welcome back, ${loggedIn.fullName}`);
+      router.replace("/dashboard");
+    } catch (err) {
+      messages.error(getErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const input = "w-full rounded border border-gray-300 px-3 py-2 text-sm";
-
   return (
-    <div className="mx-auto mt-10 max-w-sm rounded-lg bg-white p-6 shadow-sm">
-      <h1 className="mb-4 text-2xl font-bold">Login</h1>
+    <div className={`${card} w-full max-w-sm p-8`}>
+      <div className="mb-6 text-center">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white">
+          <GraduationCap size={26} />
+        </div>
+        <h1 className="text-xl font-bold text-slate-900">Welcome back</h1>
+        <p className="mt-1 text-sm text-slate-500">Sign in to your account</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="username" className="mb-1 block text-sm font-medium">Username</label>
-          <input id="username" className={input} required
-            value={username} onChange={(e) => setUsername(e.target.value)} />
-        </div>
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
-          <input id="password" type="password" className={input} required
+        <Field label="Username">
+          <input className={inputClass} required autoComplete="username" value={username}
+            onChange={(e) => setUsername(e.target.value)} />
+        </Field>
+        <Field label="Password">
+          <input className={inputClass} type="password" required autoComplete="current-password"
             value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        <button type="submit"
-          className="w-full rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
-          Sign in
+        </Field>
+        <button type="submit" disabled={submitting} className={`${primaryBtn} w-full`}>
+          {submitting ? "Signing in..." : "Sign in"}
         </button>
-        {notice && (
-          <p className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            {notice}
-          </p>
-        )}
       </form>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Don&apos;t have an account?{" "}
+        <Link href="/register" className="font-medium text-indigo-600 hover:underline">
+          Register
+        </Link>
+      </p>
     </div>
   );
 }
