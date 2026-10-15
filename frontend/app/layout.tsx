@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
+import { AuthProvider } from "@/context/AuthContext";
+import { MessageProvider } from "@/context/MessageContext";
 
 export const metadata: Metadata = {
   title: "Student Management System",
-  description: "Manage students and courses",
+  description: "Manage students, courses, attendance and marks",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 text-gray-900">
-        <Navbar />
-        <main className="mx-auto max-w-5xl p-4">{children}</main>
+      <body className="min-h-screen bg-slate-50 text-slate-900">
+        <MessageProvider>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
+        </MessageProvider>
       </body>
     </html>
   );
