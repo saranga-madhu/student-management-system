@@ -59,12 +59,16 @@ export function MessageProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={m.id}
-              className={`flex items-start gap-3 rounded-lg border p-3 text-sm shadow-md ${toastStyles[m.type]}`}
+              className={`flex items-start gap-3 rounded-2xl border p-3.5 text-sm font-medium shadow-lg backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 ${toastStyles[m.type]}`}
             >
               <Icon size={18} className="mt-0.5 shrink-0" />
-              <p className="flex-1">{m.text}</p>
-              <button aria-label="Dismiss" onClick={() => dismiss(m.id)}>
-                <X size={16} />
+              <p className="flex-1 text-xs sm:text-sm leading-snug">{m.text}</p>
+              <button
+                aria-label="Dismiss"
+                onClick={() => dismiss(m.id)}
+                className="rounded-lg p-0.5 opacity-70 transition hover:opacity-100"
+              >
+                <X size={15} />
               </button>
             </div>
           );

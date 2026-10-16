@@ -16,6 +16,18 @@ export interface Course {
   credits: number;
 }
 
+export interface Enrollment {
+  id: number;
+  studentId: number;
+  studentName: string;
+  studentEmail: string;
+  courseId: number;
+  courseCode: string;
+  courseTitle: string;
+  credits: number;
+  enrolledAt: string;
+}
+
 export type Role = "ADMIN" | "LECTURER" | "STUDENT";
 
 export interface User {
@@ -36,6 +48,4 @@ export interface RegisterPayload {
   fullName: string;
   email: string;
   password: string;
-  role: Role;
-  staffCode?: string;
 }

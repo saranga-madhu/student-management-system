@@ -38,33 +38,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`${card} w-full max-w-sm p-8`}>
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white">
-          <GraduationCap size={26} />
+    <div className={`${card} w-full max-w-sm p-8 shadow-xl shadow-slate-200/50 border-slate-200/90`}>
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/25">
+          <GraduationCap size={28} />
         </div>
-        <h1 className="text-xl font-bold text-slate-900">Welcome back</h1>
-        <p className="mt-1 text-sm text-slate-500">Sign in to your account</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+        <p className="mt-1 text-sm text-slate-500">Sign in to your EduManager portal</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label="Username">
-          <input className={inputClass} required autoComplete="username" value={username}
-            onChange={(e) => setUsername(e.target.value)} />
+          <input
+            className={inputClass}
+            required
+            autoComplete="username"
+            placeholder="Enter your username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
         </Field>
         <Field label="Password">
-          <input className={inputClass} type="password" required autoComplete="current-password"
-            value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            className={inputClass}
+            type="password"
+            required
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Field>
-        <button type="submit" disabled={submitting} className={`${primaryBtn} w-full`}>
+        <button type="submit" disabled={submitting} className={`${primaryBtn} w-full py-2.5`}>
           {submitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-8 text-center text-sm text-slate-500">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-medium text-indigo-600 hover:underline">
-          Register
+        <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+          Register as student
         </Link>
       </p>
     </div>

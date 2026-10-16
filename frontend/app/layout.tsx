@@ -6,7 +6,7 @@ import { MessageProvider } from "@/context/MessageContext";
 
 export const metadata: Metadata = {
   title: "Student Management System",
-  description: "Manage students, courses, attendance and marks",
+  description: "Manage students, courses, lecturers and enrollments",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
