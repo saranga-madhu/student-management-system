@@ -42,14 +42,28 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/courses/**").authenticated()
-                .requestMatchers("/api/courses/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
+                .requestMatchers("/api/lecturers/**").hasRole("ADMIN")
                 .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "LECTURER")
+                .requestMatchers(HttpMethod.GET, "/api/enrollments/course/**").hasAnyRole("ADMIN", "LECTURER")
+                .requestMatchers("/api/enrollments/**").hasRole("STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/courses/**").authenticated()
+                .requestMatchers("/api/courses/**").hasAnyRole("ADMIN", "LECTURER")
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOriginPatterns(java.util.List.of("http://localhost:3000", "http://127.0.0.1:3000", "*"));
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowCredentials(true);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     private static void writeJson(HttpServletResponse res, int status, String message) throws IOException {
