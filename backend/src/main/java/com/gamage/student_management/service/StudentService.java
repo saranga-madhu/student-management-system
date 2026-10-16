@@ -3,19 +3,24 @@ package com.gamage.student_management.service;
 import com.gamage.student_management.dto.request.StudentRequest;
 import com.gamage.student_management.dto.response.StudentResponse;
 import com.gamage.student_management.entity.Student;
+import com.gamage.student_management.repository.EnrollmentRepository;
 import com.gamage.student_management.repository.StudentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 @Service
 public class StudentService {
 
     private final StudentRepository repository;
+    private final EnrollmentRepository enrollmentRepository;
 
-    public StudentService(StudentRepository repository) {
+    public StudentService(StudentRepository repository, EnrollmentRepository enrollmentRepository) {
         this.repository = repository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     public List<StudentResponse> getAll() {
@@ -37,12 +42,17 @@ public class StudentService {
 
     public StudentResponse update(Long id, StudentRequest req) {
         Student student = findEntity(id);
+        if (repository.existsByEmailAndIdNot(req.email(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
         apply(student, req);
         return StudentResponse.from(repository.save(student));
     }
 
+    @Transactional
     public void delete(Long id) {
         findEntity(id);
+        enrollmentRepository.deleteByStudentId(id);
         repository.deleteById(id);
     }
 
