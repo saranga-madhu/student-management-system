@@ -21,14 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const stored = localStorage.getItem(USER_KEY);
-      if (token && stored) setUser(JSON.parse(stored) as User);
-    } catch {
-      // storage unavailable or corrupted: stay logged out
-    }
-    setReady(true);
+    queueMicrotask(() => {
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const stored = localStorage.getItem(USER_KEY);
+        if (token && stored) setUser(JSON.parse(stored) as User);
+      } catch {
+        // storage unavailable or corrupted: stay logged out
+      }
+      setReady(true);
+    });
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
