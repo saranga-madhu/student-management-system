@@ -11,7 +11,6 @@ import com.gamage.student_management.entity.User;
 import com.gamage.student_management.repository.StudentRepository;
 import com.gamage.student_management.repository.UserRepository;
 import com.gamage.student_management.security.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -27,19 +25,31 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    public AuthService(UserRepository userRepository,
+                       StudentRepository studentRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.studentRepository = studentRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
+
     @Transactional
     public UserResponse register(RegisterRequest req) {
-        if (userRepository.existsByUsername(req.username())) {
+        String username = req.username().trim();
+        String email = req.email().trim();
+        if (userRepository.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
         }
-        if (userRepository.existsByEmail(req.email())) {
+        if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
         User user = new User();
-        user.setUsername(req.username());
-        user.setFullName(req.fullName());
-        user.setEmail(req.email());
+        user.setUsername(username);
+        user.setFullName(req.fullName().trim());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(req.password()));
         user.setRole(Role.STUDENT);
         user = userRepository.save(user);
@@ -49,7 +59,8 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
-        User user = userRepository.findByUsername(req.username())
+        String username = req.username().trim();
+        User user = userRepository.findByUsername(username)
                 .filter(u -> passwordEncoder.matches(req.password(), u.getPassword()))
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Invalid username or password"));
