@@ -1,0 +1,34 @@
+databases:
+  - name: student-management-db
+    databaseName: student_management
+    user: student_management_user
+    plan: free
+
+services:
+  - type: web
+    name: student-management-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: student-management-db
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: student-management-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: student-management-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false        # Set this manually after Vercel deploys
+      - key: ADMIN_PASSWORD
+        sync: false        # Set a secure password manually
+      - key: STAFF_REGISTRATION_CODE
+        sync: false        # Set your desired code manually
