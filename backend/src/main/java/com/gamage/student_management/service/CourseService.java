@@ -32,7 +32,8 @@ public class CourseService {
     }
 
     public CourseResponse create(CourseRequest req) {
-        if (repository.existsByCourseCode(req.courseCode())) {
+        String normalizedCode = req.courseCode().trim().toUpperCase();
+        if (repository.existsByCourseCode(normalizedCode)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Course code already exists");
         }
         Course course = new Course();
@@ -42,7 +43,8 @@ public class CourseService {
 
     public CourseResponse update(Long id, CourseRequest req) {
         Course course = findEntity(id);
-        if (repository.existsByCourseCodeAndIdNot(req.courseCode(), id)) {
+        String normalizedCode = req.courseCode().trim().toUpperCase();
+        if (repository.existsByCourseCodeAndIdNot(normalizedCode, id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Course code already exists");
         }
         apply(course, req);

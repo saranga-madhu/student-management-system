@@ -2,6 +2,7 @@ package com.gamage.student_management.repository;
 
 import com.gamage.student_management.entity.Enrollment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,7 +21,11 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("select e from Enrollment e join fetch e.student join fetch e.course where e.course.id = :courseId")
     List<Enrollment> findByCourseId(@Param("courseId") Long courseId);
 
-    void deleteByStudentId(Long studentId);
+    @Modifying
+    @Query("delete from Enrollment e where e.student.id = :studentId")
+    void deleteByStudentId(@Param("studentId") Long studentId);
 
-    void deleteByCourseId(Long courseId);
+    @Modifying
+    @Query("delete from Enrollment e where e.course.id = :courseId")
+    void deleteByCourseId(@Param("courseId") Long courseId);
 }

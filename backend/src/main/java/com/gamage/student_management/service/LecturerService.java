@@ -6,7 +6,6 @@ import com.gamage.student_management.dto.response.UserResponse;
 import com.gamage.student_management.entity.Role;
 import com.gamage.student_management.entity.User;
 import com.gamage.student_management.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,11 +14,15 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class LecturerService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public LecturerService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public List<UserResponse> getAll() {
         return userRepository.findByRoleOrderByFullNameAsc(Role.LECTURER).stream()
@@ -27,36 +30,42 @@ public class LecturerService {
                 .toList();
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public UserResponse create(LecturerRequest req) {
-        if (userRepository.existsByUsername(req.username())) {
+        String username = req.username().trim();
+        String email = req.email().trim();
+        if (userRepository.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
         }
-        if (userRepository.existsByEmail(req.email())) {
+        if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
         User user = new User();
-        user.setUsername(req.username().trim());
+        user.setUsername(username);
         user.setFullName(req.fullName().trim());
-        user.setEmail(req.email().trim());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(req.password()));
         user.setRole(Role.LECTURER);
         return AuthService.toResponse(userRepository.save(user));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public UserResponse update(Long id, LecturerUpdateRequest req) {
         User user = findLecturer(id);
-        if (userRepository.existsByEmailAndIdNot(req.email().trim(), user.getId())) {
+        String email = req.email().trim();
+        if (userRepository.existsByEmailAndIdNot(email, user.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
         user.setFullName(req.fullName().trim());
-        user.setEmail(req.email().trim());
+        user.setEmail(email);
         if (req.password() != null && !req.password().isBlank()) {
             user.setPassword(passwordEncoder.encode(req.password()));
         }
         return AuthService.toResponse(userRepository.save(user));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void delete(Long id) {
         findLecturer(id);
         userRepository.deleteById(id);

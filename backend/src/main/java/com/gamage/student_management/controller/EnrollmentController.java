@@ -4,7 +4,6 @@ import com.gamage.student_management.dto.request.EnrollRequest;
 import com.gamage.student_management.dto.response.EnrollmentResponse;
 import com.gamage.student_management.service.EnrollmentService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +13,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/enrollments")
 @CrossOrigin(origins = "http://localhost:3000")
-@RequiredArgsConstructor
 public class EnrollmentController {
 
     private final EnrollmentService service;
+
+    public EnrollmentController(EnrollmentService service) {
+        this.service = service;
+    }
 
     @GetMapping("/me")
     public List<EnrollmentResponse> mine(Authentication authentication) {

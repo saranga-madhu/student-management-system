@@ -9,7 +9,6 @@ import com.gamage.student_management.repository.CourseRepository;
 import com.gamage.student_management.repository.EnrollmentRepository;
 import com.gamage.student_management.repository.StudentRepository;
 import com.gamage.student_management.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
@@ -26,6 +24,17 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
 
+    public EnrollmentService(EnrollmentRepository enrollmentRepository,
+                             StudentRepository studentRepository,
+                             CourseRepository courseRepository,
+                             UserRepository userRepository) {
+        this.enrollmentRepository = enrollmentRepository;
+        this.studentRepository = studentRepository;
+        this.courseRepository = courseRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> myEnrollments(String username) {
         Student student = requireStudentProfile(username);
         return enrollmentRepository.findByStudentId(student.getId()).stream()
@@ -33,6 +42,7 @@ public class EnrollmentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> byCourse(Long courseId) {
         if (!courseRepository.existsById(courseId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found: " + courseId);

@@ -1,9 +1,6 @@
 package com.gamage.student_management.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -12,9 +9,6 @@ import java.time.LocalDateTime;
         name = "enrollments",
         uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"})
 )
-@Getter
-@Setter
-@NoArgsConstructor
 public class Enrollment {
 
     @Id
@@ -31,6 +25,41 @@ public class Enrollment {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime enrolledAt;
+
+    public Enrollment() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public LocalDateTime getEnrolledAt() {
+        return enrolledAt;
+    }
+
+    public void setEnrolledAt(LocalDateTime enrolledAt) {
+        this.enrolledAt = enrolledAt;
+    }
 
     @PrePersist
     void onCreate() {

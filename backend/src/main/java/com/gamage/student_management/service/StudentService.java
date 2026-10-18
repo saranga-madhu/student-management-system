@@ -5,6 +5,7 @@ import com.gamage.student_management.dto.response.StudentResponse;
 import com.gamage.student_management.entity.Student;
 import com.gamage.student_management.repository.EnrollmentRepository;
 import com.gamage.student_management.repository.StudentRepository;
+import com.gamage.student_management.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +18,14 @@ public class StudentService {
 
     private final StudentRepository repository;
     private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
 
-    public StudentService(StudentRepository repository, EnrollmentRepository enrollmentRepository) {
+    public StudentService(StudentRepository repository,
+                          EnrollmentRepository enrollmentRepository,
+                          UserRepository userRepository) {
         this.repository = repository;
         this.enrollmentRepository = enrollmentRepository;
+        this.userRepository = userRepository;
     }
 
     public List<StudentResponse> getAll() {
@@ -32,7 +37,8 @@ public class StudentService {
     }
 
     public StudentResponse create(StudentRequest req) {
-        if (repository.existsByEmail(req.email())) {
+        String email = req.email().trim();
+        if (repository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
         }
         Student student = new Student();
@@ -42,7 +48,8 @@ public class StudentService {
 
     public StudentResponse update(Long id, StudentRequest req) {
         Student student = findEntity(id);
-        if (repository.existsByEmailAndIdNot(req.email(), id)) {
+        String email = req.email().trim();
+        if (repository.existsByEmailAndIdNot(email, id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
         }
         apply(student, req);
@@ -51,8 +58,11 @@ public class StudentService {
 
     @Transactional
     public void delete(Long id) {
-        findEntity(id);
+        Student student = findEntity(id);
         enrollmentRepository.deleteByStudentId(id);
+        if (student.getUserId() != null) {
+            userRepository.deleteById(student.getUserId());
+        }
         repository.deleteById(id);
     }
 
@@ -62,10 +72,10 @@ public class StudentService {
     }
 
     private void apply(Student student, StudentRequest req) {
-        student.setFirstName(req.firstName());
-        student.setLastName(req.lastName());
-        student.setEmail(req.email());
-        student.setPhone(req.phone());
+        student.setFirstName(req.firstName().trim());
+        student.setLastName(req.lastName().trim());
+        student.setEmail(req.email().trim());
+        student.setPhone(req.phone() != null ? req.phone().trim() : null);
         student.setDateOfBirth(req.dateOfBirth());
     }
 }
