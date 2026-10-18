@@ -37,8 +37,8 @@ export default function LecturersPage() {
 
   async function loadLecturers() {
     try {
-      setError("");
       const res = await api.get<User[]>("/lecturers");
+      setError("");
       setLecturers(res.data);
     } catch (err) {
       setError(getErrorMessage(err));

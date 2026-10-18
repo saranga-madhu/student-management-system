@@ -49,8 +49,8 @@ export default function CoursesPage() {
 
   async function loadCourses() {
     try {
-      setError("");
       const res = await api.get<Course[]>("/courses");
+      setError("");
       setCourses(res.data);
       if (isStudent) {
         const mine = await api.get<Enrollment[]>("/enrollments/me");

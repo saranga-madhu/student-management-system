@@ -38,8 +38,8 @@ export default function StudentsPage() {
 
   async function loadStudents() {
     try {
-      setError("");
       const res = await api.get<Student[]>("/students");
+      setError("");
       setStudents(res.data);
     } catch (err) {
       setError(getErrorMessage(err));

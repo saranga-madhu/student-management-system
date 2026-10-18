@@ -32,12 +32,12 @@ export default function DashboardPage() {
 
   async function loadData() {
     try {
-      setError("");
       if (isStudent) {
         const [c, e] = await Promise.all([
           api.get<Course[]>("/courses"),
           api.get<Enrollment[]>("/enrollments/me"),
         ]);
+        setError("");
         setCourses(c.data);
         setEnrollments(e.data);
       } else {

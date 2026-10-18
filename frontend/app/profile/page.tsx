@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useMessages } from "@/context/MessageContext";
 import { getErrorMessage } from "@/lib/api";
-import { Lock, Shield, UserCircle } from "lucide-react";
+import { Lock, UserCircle } from "lucide-react";
 import { card, inputClass, primaryBtn, roleBadge } from "@/lib/theme";
 import Field from "@/components/Field";
 
@@ -19,8 +19,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName);
-      setEmail(user.email);
+      queueMicrotask(() => {
+        setFullName(user.fullName);
+        setEmail(user.email);
+      });
     }
   }, [user]);
 
