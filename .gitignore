@@ -4,3 +4,6 @@ application-local.properties
 node_modules/
 target/
 .idea/
+.vscode/
+
+.vscode/
