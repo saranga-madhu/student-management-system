@@ -28,6 +28,10 @@ public class Student {
 
     private LocalDate dateOfBirth;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'APPROVED'")
+    private AccountStatus status = AccountStatus.APPROVED;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -90,6 +94,14 @@ public class Student {
         this.dateOfBirth = dateOfBirth;
     }
 
+    public AccountStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AccountStatus status) {
+        this.status = status;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -101,5 +113,8 @@ public class Student {
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = AccountStatus.APPROVED;
+        }
     }
 }

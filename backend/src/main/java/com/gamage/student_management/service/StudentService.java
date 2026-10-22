@@ -2,6 +2,7 @@ package com.gamage.student_management.service;
 
 import com.gamage.student_management.dto.request.StudentRequest;
 import com.gamage.student_management.dto.response.StudentResponse;
+import com.gamage.student_management.entity.AccountStatus;
 import com.gamage.student_management.entity.Student;
 import com.gamage.student_management.repository.EnrollmentRepository;
 import com.gamage.student_management.repository.StudentRepository;
@@ -43,6 +44,7 @@ public class StudentService {
         }
         Student student = new Student();
         apply(student, req);
+        student.setStatus(AccountStatus.APPROVED);
         return StudentResponse.from(repository.save(student));
     }
 
@@ -57,6 +59,16 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentResponse approve(Long id) {
+        return setStatus(id, AccountStatus.APPROVED);
+    }
+
+    @Transactional
+    public StudentResponse reject(Long id) {
+        return setStatus(id, AccountStatus.REJECTED);
+    }
+
+    @Transactional
     public void delete(Long id) {
         Student student = findEntity(id);
         enrollmentRepository.deleteByStudentId(id);
@@ -64,6 +76,16 @@ public class StudentService {
             userRepository.deleteById(student.getUserId());
         }
         repository.deleteById(id);
+    }
+
+    private StudentResponse setStatus(Long id, AccountStatus status) {
+        Student student = findEntity(id);
+        if (student.getStatus() != AccountStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only pending registrations can be approved or rejected");
+        }
+        student.setStatus(status);
+        return StudentResponse.from(repository.save(student));
     }
 
     private Student findEntity(Long id) {

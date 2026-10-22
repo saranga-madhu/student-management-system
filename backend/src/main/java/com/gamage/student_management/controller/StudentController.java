@@ -40,6 +40,16 @@ public class StudentController {
         return service.update(id, request);
     }
 
+    @PutMapping("/{id}/approve")
+    public StudentResponse approve(@PathVariable Long id) {
+        return service.approve(id);
+    }
+
+    @PutMapping("/{id}/reject")
+    public StudentResponse reject(@PathVariable Long id) {
+        return service.reject(id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

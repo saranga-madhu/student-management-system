@@ -5,6 +5,7 @@ import com.gamage.student_management.dto.request.ProfileUpdateRequest;
 import com.gamage.student_management.dto.request.RegisterRequest;
 import com.gamage.student_management.dto.response.AuthResponse;
 import com.gamage.student_management.dto.response.UserResponse;
+import com.gamage.student_management.entity.AccountStatus;
 import com.gamage.student_management.entity.Role;
 import com.gamage.student_management.entity.Student;
 import com.gamage.student_management.entity.User;
@@ -64,6 +65,7 @@ public class AuthService {
                 .filter(u -> passwordEncoder.matches(req.password(), u.getPassword()))
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        assertStudentCanLogin(user);
         return new AuthResponse(jwtService.generateToken(user), toResponse(user));
     }
 
@@ -116,7 +118,27 @@ public class AuthService {
         applyName(student, user.getFullName());
         student.setEmail(user.getEmail());
         student.setUserId(user.getId());
+        student.setStatus(AccountStatus.PENDING);
         studentRepository.save(student);
+    }
+
+    private void assertStudentCanLogin(User user) {
+        if (user.getRole() != Role.STUDENT) {
+            return;
+        }
+        Student student = studentRepository.findByUserId(user.getId())
+                .or(() -> studentRepository.findByEmail(user.getEmail()))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "Student profile was not found. Contact an administrator."));
+        AccountStatus status = student.getStatus() == null ? AccountStatus.APPROVED : student.getStatus();
+        if (status == AccountStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your registration is pending admin approval. You cannot sign in yet.");
+        }
+        if (status == AccountStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your registration was rejected. Contact an administrator.");
+        }
     }
 
     static void applyName(Student student, String fullName) {
