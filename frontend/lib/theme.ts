@@ -5,6 +5,12 @@ export const card = "rounded-2xl border border-slate-200/80 bg-white shadow-xs t
 export const inputClass =
   "w-full rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all";
 
+export function fieldInputClass(error?: string) {
+  return error
+    ? `${inputClass} border-rose-400 focus:border-rose-500 focus:ring-rose-500/10`
+    : inputClass;
+}
+
 export const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export const primaryBtn =
@@ -28,6 +34,12 @@ export const toastStyles = {
   success: "border-emerald-200 bg-emerald-50 text-emerald-800 shadow-sm",
   error: "border-rose-200 bg-rose-50 text-rose-800 shadow-sm",
   info: "border-indigo-200 bg-indigo-50 text-indigo-800 shadow-sm",
+};
+
+export const statusBadge: Record<"PENDING" | "APPROVED" | "REJECTED", string> = {
+  PENDING: "inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700",
+  APPROVED: "inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700",
+  REJECTED: "inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700",
 };
 
 export const roleBadge: Record<Role, string> = {

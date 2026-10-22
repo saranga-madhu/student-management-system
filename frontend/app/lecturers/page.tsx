@@ -1,23 +1,24 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import api, { getErrorMessage } from "@/lib/api";
+import api, { getErrorMessage, getFieldErrors } from "@/lib/api";
 import { User } from "@/types";
 import Spinner from "@/components/Spinner";
 import ErrorMessage from "@/components/ErrorMessage";
-
+import Field from "@/components/Field";
+import { useMessages } from "@/context/MessageContext";
 import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
-import { 
-  card, 
-  dangerBtn, 
-  editBtn, 
-  inputClass, 
-  labelClass, 
-  primaryBtn, 
-  secondaryBtn, 
-  tableCell, 
-  tableHeader 
+import {
+  card,
+  dangerBtn,
+  editBtn,
+  fieldInputClass,
+  primaryBtn,
+  secondaryBtn,
+  tableCell,
+  tableHeader,
 } from "@/lib/theme";
+import { FieldErrors, email, firstError, password, personName, username } from "@/lib/validation";
 
 const emptyForm = {
   username: "",
@@ -27,13 +28,14 @@ const emptyForm = {
 };
 
 export default function LecturersPage() {
+  const messages = useMessages();
   const [lecturers, setLecturers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   async function loadLecturers() {
     try {
@@ -54,27 +56,40 @@ export default function LecturersPage() {
   function startEdit(u: User) {
     setEditingId(u.id);
     setForm({ username: u.username, fullName: u.fullName, email: u.email, password: "" });
-    setFormError("");
+    setErrors({});
   }
 
   function resetForm() {
     setEditingId(null);
     setForm(emptyForm);
-    setFormError("");
+    setErrors({});
+  }
+
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    if (!editingId) {
+      const userErr = username(form.username);
+      if (userErr) next.username = userErr;
+    }
+    const nameErr = personName(form.fullName, "Full name");
+    const emailErr = email(form.email);
+    const passErr = password(form.password, { required: !editingId });
+    if (nameErr) next.fullName = nameErr;
+    if (emailErr) next.email = emailErr;
+    if (passErr) next.password = passErr;
+    return next;
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!editingId && form.password.length < 8) {
-      setFormError("Password must be at least 8 characters");
-      return;
-    }
-    if (editingId && form.password && form.password.length < 8) {
-      setFormError("Password must be at least 8 characters");
+    const next = validate();
+    if (Object.keys(next).length) {
+      setErrors(next);
+      messages.error(firstError(next) || "Please fix the highlighted fields");
       return;
     }
     setSubmitting(true);
-    setFormError("");
+    setErrors({});
     try {
       if (editingId) {
         await api.put(`/lecturers/${editingId}`, {
@@ -82,6 +97,7 @@ export default function LecturersPage() {
           email: form.email.trim(),
           password: form.password || undefined,
         });
+        messages.success("Lecturer updated");
       } else {
         await api.post("/lecturers", {
           username: form.username.trim(),
@@ -89,11 +105,13 @@ export default function LecturersPage() {
           email: form.email.trim(),
           password: form.password,
         });
+        messages.success("Lecturer added");
       }
       resetForm();
       await loadLecturers();
     } catch (err) {
-      setFormError(getErrorMessage(err));
+      setErrors(getFieldErrors(err));
+      messages.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -105,8 +123,9 @@ export default function LecturersPage() {
       await api.delete(`/lecturers/${id}`);
       setLecturers((prev) => prev.filter((l) => l.id !== id));
       if (editingId === id) resetForm();
+      messages.success("Lecturer deleted");
     } catch (err) {
-      setError(getErrorMessage(err));
+      messages.error(getErrorMessage(err));
     }
   }
 
@@ -119,7 +138,7 @@ export default function LecturersPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className={`${card} p-6`}>
+      <form onSubmit={handleSubmit} noValidate className={`${card} p-6`}>
         <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
           {editingId ? (
             <Pencil size={18} className="text-indigo-600" />
@@ -132,51 +151,41 @@ export default function LecturersPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className={labelClass}>Username</label>
+          <Field label="Username" error={errors.username}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.username)}
               placeholder="e.g. jdoe"
-              required
               disabled={!!editingId}
               value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Full Name</label>
+          </Field>
+          <Field label="Full Name" error={errors.fullName}>
             <input
-              className={inputClass}
-              placeholder="e.g. Dr. John Doe"
-              required
+              className={fieldInputClass(errors.fullName)}
+              placeholder="e.g. John Doe"
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Email Address</label>
+          </Field>
+          <Field label="Email Address" error={errors.email}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.email)}
               type="email"
               placeholder="e.g. jdoe@university.edu"
-              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>
-              {editingId ? "New Password (optional)" : "Password (min 8 chars)"}
-            </label>
+          </Field>
+          <Field label={editingId ? "New Password (optional)" : "Password (min 8 chars)"} error={errors.password}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.password)}
               type="password"
               placeholder={editingId ? "Leave blank to keep unchanged" : "••••••••"}
-              required={!editingId}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
-          </div>
+          </Field>
           <div className="flex items-end gap-2.5 sm:col-span-2 lg:col-span-1">
             <button type="submit" disabled={submitting} className={primaryBtn}>
               {submitting ? "Saving..." : editingId ? "Save changes" : "Add lecturer"}
@@ -188,11 +197,6 @@ export default function LecturersPage() {
             )}
           </div>
         </div>
-        {formError && (
-          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
-            {formError}
-          </p>
-        )}
       </form>
 
       {loading ? (

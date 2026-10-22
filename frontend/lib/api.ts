@@ -35,6 +35,14 @@ api.interceptors.response.use(
   }
 );
 
+export function getFieldErrors(err: unknown): Record<string, string> {
+  if (axios.isAxiosError(err) && err.response?.data && typeof err.response.data === "object") {
+    const data = err.response.data as { errors?: Record<string, string> };
+    return data.errors ?? {};
+  }
+  return {};
+}
+
 export function getErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     if (err.response) {

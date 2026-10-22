@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import api, { getErrorMessage } from "@/lib/api";
+import api, { getErrorMessage, getFieldErrors } from "@/lib/api";
 import { Course, Enrollment } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { useMessages } from "@/context/MessageContext";
 import Spinner from "@/components/Spinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Field from "@/components/Field";
+import { FieldErrors, courseCode, credits, firstError, required } from "@/lib/validation";
 
 import { 
   BookOpen, 
@@ -20,8 +23,7 @@ import {
   card, 
   dangerBtn, 
   editBtn, 
-  inputClass, 
-  labelClass, 
+  fieldInputClass,
   primaryBtn, 
   secondaryBtn, 
   tableCell, 
@@ -32,6 +34,7 @@ const emptyForm = { courseCode: "", title: "", description: "", credits: "" };
 
 export default function CoursesPage() {
   const { hasRole } = useAuth();
+  const messages = useMessages();
   const canManage = hasRole("ADMIN", "LECTURER");
   const isStudent = hasRole("STUDENT");
 
@@ -44,7 +47,7 @@ export default function CoursesPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [enrollingId, setEnrollingId] = useState<number | null>(null);
 
   async function loadCourses() {
@@ -76,35 +79,58 @@ export default function CoursesPage() {
       description: c.description ?? "",
       credits: String(c.credits),
     });
-    setFormError("");
+    setErrors({});
   }
 
   function resetForm() {
     setEditingId(null);
     setForm(emptyForm);
-    setFormError("");
+    setErrors({});
+  }
+
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    const codeErr = courseCode(form.courseCode);
+    const titleErr = required(form.title, "Course title");
+    const creditErr = credits(form.credits);
+    if (codeErr) next.courseCode = codeErr;
+    if (titleErr) next.title = titleErr;
+    if (creditErr) next.credits = creditErr;
+    if (form.description.trim().length > 500) {
+      next.description = "Description must be at most 500 characters";
+    }
+    return next;
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const next = validate();
+    if (Object.keys(next).length) {
+      setErrors(next);
+      messages.error(firstError(next) || "Please fix the highlighted fields");
+      return;
+    }
     setSubmitting(true);
-    setFormError("");
+    setErrors({});
     const payload = {
-      courseCode: form.courseCode,
-      title: form.title,
+      courseCode: form.courseCode.trim(),
+      title: form.title.trim(),
       description: form.description || null,
       credits: Number(form.credits),
     };
     try {
       if (editingId) {
         await api.put(`/courses/${editingId}`, payload);
+        messages.success("Course updated");
       } else {
         await api.post("/courses", payload);
+        messages.success("Course created");
       }
       resetForm();
       await loadCourses();
     } catch (err) {
-      setFormError(getErrorMessage(err));
+      setErrors(getFieldErrors(err));
+      messages.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -120,8 +146,9 @@ export default function CoursesPage() {
         setSelectedCourse(null);
         setCourseStudents([]);
       }
+      messages.success("Course deleted");
     } catch (err) {
-      setError(getErrorMessage(err));
+      messages.error(getErrorMessage(err));
     }
   }
 
@@ -135,12 +162,14 @@ export default function CoursesPage() {
           next.delete(course.id);
           return next;
         });
+        messages.success(`Unenrolled from ${course.courseCode}`);
       } else {
         await api.post("/enrollments", { courseId: course.id });
         setEnrolledIds((prev) => new Set(prev).add(course.id));
+        messages.success(`Enrolled in ${course.courseCode}`);
       }
     } catch (err) {
-      setError(getErrorMessage(err));
+      messages.error(getErrorMessage(err));
     } finally {
       setEnrollingId(null);
     }
@@ -166,7 +195,7 @@ export default function CoursesPage() {
       </div>
 
       {canManage && (
-        <form onSubmit={handleSubmit} className={`${card} p-6`}>
+        <form onSubmit={handleSubmit} noValidate className={`${card} p-6`}>
           <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
             {editingId ? (
               <Pencil size={18} className="text-indigo-600" />
@@ -179,46 +208,41 @@ export default function CoursesPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className={labelClass}>Course Code</label>
+            <Field label="Course Code" error={errors.courseCode}>
               <input
-                className={inputClass}
+                className={fieldInputClass(errors.courseCode)}
                 placeholder="e.g. CS101"
-                required
                 value={form.courseCode}
                 onChange={(e) => setForm({ ...form, courseCode: e.target.value })}
               />
-            </div>
-            <div>
-              <label className={labelClass}>Course Title</label>
+            </Field>
+            <Field label="Course Title" error={errors.title}>
               <input
-                className={inputClass}
+                className={fieldInputClass(errors.title)}
                 placeholder="e.g. Introduction to Computer Science"
-                required
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
-            </div>
-            <div>
-              <label className={labelClass}>Credits</label>
+            </Field>
+            <Field label="Credits" error={errors.credits}>
               <input
-                className={inputClass}
+                className={fieldInputClass(errors.credits)}
                 type="number"
                 min={1}
                 placeholder="Credits"
-                required
                 value={form.credits}
                 onChange={(e) => setForm({ ...form, credits: e.target.value })}
               />
-            </div>
+            </Field>
             <div className="sm:col-span-2">
-              <label className={labelClass}>Description (optional)</label>
-              <input
-                className={inputClass}
-                placeholder="Brief summary of course content and objectives"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
+              <Field label="Description (optional)" error={errors.description}>
+                <input
+                  className={fieldInputClass(errors.description)}
+                  placeholder="Brief summary of course content and objectives"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </Field>
             </div>
             <div className="flex items-end gap-2.5">
               <button type="submit" disabled={submitting} className={primaryBtn}>
@@ -231,11 +255,6 @@ export default function CoursesPage() {
               )}
             </div>
           </div>
-          {formError && (
-            <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
-              {formError}
-            </p>
-          )}
         </form>
       )}
 
