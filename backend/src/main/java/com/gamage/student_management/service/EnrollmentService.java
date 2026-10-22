@@ -1,6 +1,7 @@
 package com.gamage.student_management.service;
 
 import com.gamage.student_management.dto.response.EnrollmentResponse;
+import com.gamage.student_management.entity.AccountStatus;
 import com.gamage.student_management.entity.Course;
 import com.gamage.student_management.entity.Enrollment;
 import com.gamage.student_management.entity.Student;
@@ -77,7 +78,7 @@ public class EnrollmentService {
     private Student requireStudentProfile(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
-        return studentRepository.findByUserId(user.getId()).orElseGet(() -> {
+        Student student = studentRepository.findByUserId(user.getId()).orElseGet(() -> {
             Student byEmail = studentRepository.findByEmail(user.getEmail()).orElse(null);
             if (byEmail != null) {
                 byEmail.setUserId(user.getId());
@@ -87,7 +88,14 @@ public class EnrollmentService {
             AuthService.applyName(created, user.getFullName());
             created.setEmail(user.getEmail());
             created.setUserId(user.getId());
+            created.setStatus(AccountStatus.APPROVED);
             return studentRepository.save(created);
         });
+        AccountStatus status = student.getStatus() == null ? AccountStatus.APPROVED : student.getStatus();
+        if (status != AccountStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your student account is not approved yet");
+        }
+        return student;
     }
 }

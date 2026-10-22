@@ -64,9 +64,10 @@ public class CourseService {
     }
 
     private void apply(Course course, CourseRequest req) {
-        course.setCourseCode(req.courseCode());
-        course.setTitle(req.title());
-        course.setDescription(req.description());
+        course.setCourseCode(req.courseCode().trim().toUpperCase());
+        course.setTitle(req.title().trim());
+        course.setDescription(req.description() != null && !req.description().isBlank()
+                ? req.description().trim() : null);
         course.setCredits(req.credits());
     }
 }
