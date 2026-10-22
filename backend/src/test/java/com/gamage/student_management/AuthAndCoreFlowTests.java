@@ -62,7 +62,16 @@ class AuthAndCoreFlowTests {
         assertEquals(Role.STUDENT, registered.role());
         assertEquals(username, registered.username());
 
-        // Login with correct credentials
+        ResponseStatusException pending = assertThrows(ResponseStatusException.class, () ->
+                authService.login(new LoginRequest(username, "password123")));
+        assertEquals(403, pending.getStatusCode().value());
+
+        var pendingStudent = studentService.getAll().stream()
+                .filter(s -> email.equals(s.email()))
+                .findFirst()
+                .orElseThrow();
+        studentService.approve(pendingStudent.id());
+
         AuthResponse authResp = authService.login(new LoginRequest(username, "password123"));
         assertNotNull(authResp);
         assertNotNull(authResp.token());
@@ -71,6 +80,23 @@ class AuthAndCoreFlowTests {
         // Login with wrong password
         assertThrows(ResponseStatusException.class, () ->
                 authService.login(new LoginRequest(username, "wrong_password")));
+    }
+
+    @Test
+    void testRejectedStudentCannotLogin() {
+        String username = "student_reject_" + System.currentTimeMillis();
+        String email = username + "@example.com";
+        authService.register(new RegisterRequest(username, "Reject Student", email, "password123"));
+
+        var pendingStudent = studentService.getAll().stream()
+                .filter(s -> email.equals(s.email()))
+                .findFirst()
+                .orElseThrow();
+        studentService.reject(pendingStudent.id());
+
+        ResponseStatusException rejected = assertThrows(ResponseStatusException.class, () ->
+                authService.login(new LoginRequest(username, "password123")));
+        assertEquals(403, rejected.getStatusCode().value());
     }
 
     @Test
@@ -83,6 +109,11 @@ class AuthAndCoreFlowTests {
         String username = "enroll_student_" + System.currentTimeMillis();
         String email = username + "@example.com";
         authService.register(new RegisterRequest(username, "Enrollment Tester", email, "password123"));
+        var pendingStudent = studentService.getAll().stream()
+                .filter(s -> email.equals(s.email()))
+                .findFirst()
+                .orElseThrow();
+        studentService.approve(pendingStudent.id());
 
         EnrollmentResponse enrollment = enrollmentService.enroll(username, course.id());
         assertNotNull(enrollment);
@@ -100,13 +131,13 @@ class AuthAndCoreFlowTests {
     void testStudentCrud() {
         String email = "student_crud_" + System.currentTimeMillis() + "@example.com";
         StudentResponse student = studentService.create(new StudentRequest(
-                "Jane", "Doe", email, "+123456789", LocalDate.of(2000, 1, 1)));
+                "Jane", "Doe", email, "0123456789", LocalDate.of(2000, 1, 1)));
 
         assertNotNull(student);
         assertEquals("Jane", student.firstName());
 
         StudentResponse updated = studentService.update(student.id(), new StudentRequest(
-                "Janet", "Doe", email, "+123456789", LocalDate.of(2000, 1, 1)));
+                "Janet", "Doe", email, "0123456789", LocalDate.of(2000, 1, 1)));
         assertEquals("Janet", updated.firstName());
 
         studentService.delete(student.id());
