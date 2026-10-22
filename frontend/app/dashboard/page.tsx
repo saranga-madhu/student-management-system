@@ -14,7 +14,7 @@ import {
 import api, { getErrorMessage } from "@/lib/api";
 import { Course, Enrollment, Student, User } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-import { card } from "@/lib/theme";
+import { card, statusBadge } from "@/lib/theme";
 import Spinner from "@/components/Spinner";
 import ErrorMessage from "@/components/ErrorMessage";
 
@@ -166,6 +166,7 @@ export default function DashboardPage() {
   }
 
   const totalCredits = courses.reduce((sum, c) => sum + (c.credits ?? 0), 0);
+  const pendingStudents = students.filter((s) => s.status === "PENDING");
   const recentStudents = students.slice(-5).reverse();
   const recentCourses = courses.slice(-5).reverse();
 
@@ -262,6 +263,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {isAdmin && pendingStudents.length > 0 && (
+        <section className={`${card} p-6`}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-2">
+              <Users size={18} className="text-amber-600" />
+              <h2 className="font-semibold text-slate-900">Pending registrations</h2>
+            </div>
+            <Link href="/students" className="text-xs font-semibold text-amber-700 hover:underline">
+              Review in Students
+            </Link>
+          </div>
+          <ul className="divide-y divide-slate-100 text-sm">
+            {pendingStudents.slice(0, 6).map((s) => (
+              <li key={s.id} className="flex items-center justify-between py-3">
+                <div>
+                  <p className="font-medium text-slate-900">{s.firstName} {s.lastName}</p>
+                  <p className="text-xs text-slate-500">{s.email}</p>
+                </div>
+                <span className={statusBadge.PENDING}>PENDING</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <section className={`${card} p-6`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -288,6 +314,9 @@ export default function DashboardPage() {
                       <p className="font-medium text-slate-900">{s.firstName} {s.lastName}</p>
                       <p className="text-xs text-slate-500">{s.email}</p>
                     </div>
+                    {s.status && s.status !== "APPROVED" && (
+                      <span className={statusBadge[s.status]}>{s.status}</span>
+                    )}
                   </div>
                 </li>
               ))}

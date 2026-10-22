@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMessages } from "@/context/MessageContext";
-import { getErrorMessage } from "@/lib/api";
-import { card, inputClass, primaryBtn } from "@/lib/theme";
+import { getErrorMessage, getFieldErrors } from "@/lib/api";
+import { card, fieldInputClass, primaryBtn } from "@/lib/theme";
 import Field from "@/components/Field";
+import { FieldErrors, confirmPassword, email, firstError, password, personName, username } from "@/lib/validation";
 
 const emptyForm = {
   fullName: "",
@@ -25,27 +26,36 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     if (ready && user) router.replace("/dashboard");
   }, [ready, user, router]);
 
-  function validate(): string | null {
-    if (form.username.trim().length < 3) return "Username must be at least 3 characters";
-    if (form.password.length < 8) return "Password must be at least 8 characters";
-    if (form.password !== form.confirmPassword) return "Passwords do not match";
-    return null;
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    const fullName = personName(form.fullName, "Full name");
+    const userName = username(form.username);
+    const mail = email(form.email);
+    const pass = password(form.password);
+    const confirm = confirmPassword(form.confirmPassword, form.password);
+    if (fullName) next.fullName = fullName;
+    if (userName) next.username = userName;
+    if (mail) next.email = mail;
+    if (pass) next.password = pass;
+    if (confirm) next.confirmPassword = confirm;
+    return next;
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const problem = validate();
-    if (problem) {
-      setFormError(problem);
+    const next = validate();
+    if (Object.keys(next).length) {
+      setErrors(next);
+      messages.error(firstError(next) || "Please fix the highlighted fields");
       return;
     }
-    setFormError("");
+    setErrors({});
     setSubmitting(true);
     try {
       await register({
@@ -54,9 +64,11 @@ export default function RegisterPage() {
         email: form.email.trim(),
         password: form.password,
       });
-      messages.success("Student account created. You can now sign in.");
+      messages.success("Registration submitted. An admin must approve your account before you can sign in.");
       router.push("/login");
     } catch (err) {
+      const fields = getFieldErrors(err);
+      setErrors(fields);
       messages.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -73,22 +85,20 @@ export default function RegisterPage() {
         <p className="mt-1 text-sm text-slate-500">Create an account to enroll in courses and track degrees</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Full name">
+          <Field label="Full name" error={errors.fullName}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.fullName)}
               placeholder="e.g. John Doe"
-              required
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
             />
           </Field>
-          <Field label="Username">
+          <Field label="Username" error={errors.username}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.username)}
               placeholder="e.g. jdoe"
-              required
               autoComplete="username"
               value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -96,47 +106,38 @@ export default function RegisterPage() {
           </Field>
         </div>
 
-        <Field label="Email address">
+        <Field label="Email address" error={errors.email}>
           <input
-            className={inputClass}
+            className={fieldInputClass(errors.email)}
             type="email"
             placeholder="e.g. john@example.com"
-            required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Password (min 8 chars)">
+          <Field label="Password (min 8 chars)" error={errors.password}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.password)}
               type="password"
               placeholder="••••••••"
-              required
               autoComplete="new-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </Field>
-          <Field label="Confirm password">
+          <Field label="Confirm password" error={errors.confirmPassword}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.confirmPassword)}
               type="password"
               placeholder="••••••••"
-              required
               autoComplete="new-password"
               value={form.confirmPassword}
               onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
             />
           </Field>
         </div>
-
-        {formError && (
-          <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
-            {formError}
-          </p>
-        )}
 
         <button type="submit" disabled={submitting} className={`${primaryBtn} w-full py-2.5`}>
           {submitting ? "Creating account..." : "Complete registration"}

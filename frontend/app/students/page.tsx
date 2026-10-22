@@ -1,23 +1,33 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import api, { getErrorMessage } from "@/lib/api";
+import api, { getErrorMessage, getFieldErrors } from "@/lib/api";
 import { Student } from "@/types";
 import Spinner from "@/components/Spinner";
 import ErrorMessage from "@/components/ErrorMessage";
-
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
-import { 
-  card, 
-  dangerBtn, 
-  editBtn, 
-  inputClass, 
-  labelClass, 
-  primaryBtn, 
-  secondaryBtn, 
-  tableCell, 
-  tableHeader 
+import Field from "@/components/Field";
+import { useAuth } from "@/context/AuthContext";
+import { useMessages } from "@/context/MessageContext";
+import { Check, Pencil, Plus, Trash2, Users, X } from "lucide-react";
+import {
+  card,
+  dangerBtn,
+  editBtn,
+  fieldInputClass,
+  primaryBtn,
+  secondaryBtn,
+  statusBadge,
+  tableCell,
+  tableHeader,
 } from "@/lib/theme";
+import {
+  FieldErrors,
+  dateOfBirth,
+  email,
+  firstError,
+  personName,
+  phone,
+} from "@/lib/validation";
 
 const emptyForm = {
   firstName: "",
@@ -28,13 +38,18 @@ const emptyForm = {
 };
 
 export default function StudentsPage() {
+  const { hasRole } = useAuth();
+  const messages = useMessages();
+  const isAdmin = hasRole("ADMIN");
+
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
 
   async function loadStudents() {
     try {
@@ -61,34 +76,61 @@ export default function StudentsPage() {
       phone: s.phone ?? "",
       dateOfBirth: s.dateOfBirth ?? "",
     });
-    setFormError("");
+    setErrors({});
   }
 
   function resetForm() {
     setEditingId(null);
     setForm(emptyForm);
-    setFormError("");
+    setErrors({});
+  }
+
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    const first = personName(form.firstName, "First name");
+    const last = personName(form.lastName, "Last name");
+    const mail = email(form.email);
+    const phoneErr = phone(form.phone);
+    const dobErr = dateOfBirth(form.dateOfBirth);
+    if (first) next.firstName = first;
+    if (last) next.lastName = last;
+    if (mail) next.email = mail;
+    if (phoneErr) next.phone = phoneErr;
+    if (dobErr) next.dateOfBirth = dobErr;
+    return next;
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const next = validate();
+    if (Object.keys(next).length) {
+      setErrors(next);
+      messages.error(firstError(next) || "Please fix the highlighted fields");
+      return;
+    }
     setSubmitting(true);
-    setFormError("");
+    setErrors({});
     const payload = {
       ...form,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
       phone: form.phone || null,
       dateOfBirth: form.dateOfBirth || null,
     };
     try {
       if (editingId) {
         await api.put(`/students/${editingId}`, payload);
+        messages.success("Student updated");
       } else {
         await api.post("/students", payload);
+        messages.success("Student added");
       }
       resetForm();
       await loadStudents();
     } catch (err) {
-      setFormError(getErrorMessage(err));
+      setErrors(getFieldErrors(err));
+      messages.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -100,8 +142,22 @@ export default function StudentsPage() {
       await api.delete(`/students/${id}`);
       setStudents((prev) => prev.filter((s) => s.id !== id));
       if (editingId === id) resetForm();
+      messages.success("Student deleted");
     } catch (err) {
-      setError(getErrorMessage(err));
+      messages.error(getErrorMessage(err));
+    }
+  }
+
+  async function updateStatus(id: number, action: "approve" | "reject") {
+    setStatusUpdating(id);
+    try {
+      await api.put(`/students/${id}/${action}`);
+      messages.success(action === "approve" ? "Student approved" : "Student rejected");
+      await loadStudents();
+    } catch (err) {
+      messages.error(getErrorMessage(err));
+    } finally {
+      setStatusUpdating(null);
     }
   }
 
@@ -114,7 +170,7 @@ export default function StudentsPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className={`${card} p-6`}>
+      <form onSubmit={handleSubmit} noValidate className={`${card} p-6`}>
         <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
           {editingId ? (
             <Pencil size={18} className="text-indigo-600" />
@@ -127,55 +183,47 @@ export default function StudentsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className={labelClass}>First Name</label>
+          <Field label="First Name" error={errors.firstName}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.firstName)}
               placeholder="e.g. Sarah"
-              required
               value={form.firstName}
               onChange={(e) => setForm({ ...form, firstName: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Last Name</label>
+          </Field>
+          <Field label="Last Name" error={errors.lastName}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.lastName)}
               placeholder="e.g. Connor"
-              required
               value={form.lastName}
               onChange={(e) => setForm({ ...form, lastName: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Email Address</label>
+          </Field>
+          <Field label="Email Address" error={errors.email}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.email)}
               type="email"
               placeholder="e.g. sarah@example.com"
-              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Phone (optional)</label>
+          </Field>
+          <Field label="Phone (optional, 10 digits)" error={errors.phone}>
             <input
-              className={inputClass}
-              placeholder="e.g. +1 555-0199"
+              className={fieldInputClass(errors.phone)}
+              placeholder="e.g. 0771234567"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
-          </div>
-          <div>
-            <label className={labelClass}>Date of Birth (optional)</label>
+          </Field>
+          <Field label="Date of Birth (optional, age 18-30)" error={errors.dateOfBirth}>
             <input
-              className={inputClass}
+              className={fieldInputClass(errors.dateOfBirth)}
               type="date"
               value={form.dateOfBirth}
               onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
             />
-          </div>
+          </Field>
           <div className="flex items-end gap-2.5">
             <button type="submit" disabled={submitting} className={primaryBtn}>
               {submitting ? "Saving..." : editingId ? "Save changes" : "Add student"}
@@ -187,11 +235,6 @@ export default function StudentsPage() {
             )}
           </div>
         </div>
-        {formError && (
-          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
-            {formError}
-          </p>
-        )}
       </form>
 
       {loading ? (
@@ -213,6 +256,7 @@ export default function StudentsPage() {
                   <th className={tableHeader}>Email</th>
                   <th className={tableHeader}>Phone</th>
                   <th className={tableHeader}>Date of birth</th>
+                  <th className={tableHeader}>Status</th>
                   <th className={`${tableHeader} text-right`}>Actions</th>
                 </tr>
               </thead>
@@ -237,8 +281,31 @@ export default function StudentsPage() {
                     <td className={`${tableCell} text-slate-600`}>
                       {s.dateOfBirth || <span className="text-slate-300">—</span>}
                     </td>
+                    <td className={tableCell}>
+                      <span className={statusBadge[s.status ?? "APPROVED"]}>{s.status ?? "APPROVED"}</span>
+                    </td>
                     <td className={`${tableCell} text-right whitespace-nowrap`}>
                       <div className="inline-flex items-center gap-2">
+                        {isAdmin && s.status === "PENDING" && (
+                          <>
+                            <button
+                              onClick={() => updateStatus(s.id, "approve")}
+                              disabled={statusUpdating === s.id}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-all hover:bg-emerald-100 active:scale-[0.98] disabled:opacity-50"
+                            >
+                              <Check size={12} />
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => updateStatus(s.id, "reject")}
+                              disabled={statusUpdating === s.id}
+                              className={dangerBtn}
+                            >
+                              <X size={12} />
+                              Reject
+                            </button>
+                          </>
+                        )}
                         <button onClick={() => startEdit(s)} className={editBtn}>
                           <Pencil size={12} />
                           Edit

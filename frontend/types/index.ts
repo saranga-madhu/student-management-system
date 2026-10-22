@@ -1,3 +1,5 @@
+export type AccountStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 export interface Student {
   id: number;
   firstName: string;
@@ -5,6 +7,7 @@ export interface Student {
   email: string;
   phone: string | null;
   dateOfBirth: string | null;
+  status: AccountStatus;
   createdAt: string;
 }
 
