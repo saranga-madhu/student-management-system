@@ -10,6 +10,7 @@ import { getErrorMessage, getFieldErrors } from "@/lib/api";
 import { card, fieldInputClass, primaryBtn } from "@/lib/theme";
 import Field from "@/components/Field";
 import { FieldErrors, confirmPassword, email, firstError, password, personName, username } from "@/lib/validation";
+import PasswordInput from "@/components/PasswordInput";
 
 const emptyForm = {
   fullName: "",
@@ -118,9 +119,8 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Password (min 8 chars)" error={errors.password}>
-            <input
+            <PasswordInput
               className={fieldInputClass(errors.password)}
-              type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               value={form.password}
@@ -128,9 +128,8 @@ export default function RegisterPage() {
             />
           </Field>
           <Field label="Confirm password" error={errors.confirmPassword}>
-            <input
+            <PasswordInput
               className={fieldInputClass(errors.confirmPassword)}
-              type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               value={form.confirmPassword}

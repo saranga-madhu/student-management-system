@@ -8,6 +8,7 @@ import { Lock, UserCircle } from "lucide-react";
 import { card, fieldInputClass, inputClass, primaryBtn, roleBadge } from "@/lib/theme";
 import Field from "@/components/Field";
 import { FieldErrors, confirmPassword, email, firstError, password, personName } from "@/lib/validation";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
@@ -145,9 +146,8 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="New Password (optional)" error={errors.password}>
-                <input
+                <PasswordInput
                   className={fieldInputClass(errors.password)}
-                  type="password"
                   placeholder="Leave blank to keep current"
                   autoComplete="new-password"
                   value={passwordValue}
@@ -155,9 +155,8 @@ export default function ProfilePage() {
                 />
               </Field>
               <Field label="Confirm New Password" error={errors.confirmPassword}>
-                <input
+                <PasswordInput
                   className={fieldInputClass(errors.confirmPassword)}
-                  type="password"
                   placeholder="Repeat new password"
                   autoComplete="new-password"
                   value={confirmPasswordValue}

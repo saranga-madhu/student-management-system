@@ -19,6 +19,7 @@ import {
   tableHeader,
 } from "@/lib/theme";
 import { FieldErrors, email, firstError, password, personName, username } from "@/lib/validation";
+import PasswordInput from "@/components/PasswordInput";
 
 const emptyForm = {
   username: "",
@@ -178,9 +179,8 @@ export default function LecturersPage() {
             />
           </Field>
           <Field label={editingId ? "New Password (optional)" : "Password (min 8 chars)"} error={errors.password}>
-            <input
+            <PasswordInput
               className={fieldInputClass(errors.password)}
-              type="password"
               placeholder={editingId ? "Leave blank to keep unchanged" : "••••••••"}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}

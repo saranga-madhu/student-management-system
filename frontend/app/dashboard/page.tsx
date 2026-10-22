@@ -110,11 +110,11 @@ export default function DashboardPage() {
                 </p>
                 <p className="mt-2 text-3xl font-extrabold text-slate-900">{enrollments.length}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
                 <BookCheck size={24} />
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-emerald-600 group-hover:underline">
+            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-blue-600 group-hover:underline">
               <span>Manage enrollments</span>
               <ArrowRight size={14} />
             </div>
@@ -214,11 +214,11 @@ export default function DashboardPage() {
               </p>
               <p className="mt-2 text-3xl font-extrabold text-slate-900">{courses.length}</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
               <BookOpen size={22} />
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-emerald-600 group-hover:underline">
+          <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-blue-600 group-hover:underline">
             <span>Manage catalog</span>
             <ArrowRight size={13} />
           </div>
@@ -236,11 +236,11 @@ export default function DashboardPage() {
                 </p>
                 <p className="mt-2 text-3xl font-extrabold text-slate-900">{lecturers.length}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 transition-colors group-hover:bg-amber-600 group-hover:text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
                 <UserCog size={22} />
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-amber-600 group-hover:underline">
+            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-indigo-600 group-hover:underline">
               <span>View faculty</span>
               <ArrowRight size={13} />
             </div>
@@ -267,10 +267,10 @@ export default function DashboardPage() {
         <section className={`${card} p-6`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
-              <Users size={18} className="text-amber-600" />
+              <Users size={18} className="text-indigo-600" />
               <h2 className="font-semibold text-slate-900">Pending registrations</h2>
             </div>
-            <Link href="/students" className="text-xs font-semibold text-amber-700 hover:underline">
+            <Link href="/students" className="text-xs font-semibold text-indigo-700 hover:underline">
               Review in Students
             </Link>
           </div>
@@ -327,10 +327,10 @@ export default function DashboardPage() {
         <section className={`${card} p-6`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
-              <BookOpen size={18} className="text-emerald-600" />
+              <BookOpen size={18} className="text-blue-600" />
               <h2 className="font-semibold text-slate-900">Recent courses</h2>
             </div>
-            <Link href="/courses" className="text-xs font-semibold text-emerald-600 hover:underline">
+            <Link href="/courses" className="text-xs font-semibold text-blue-600 hover:underline">
               See all
             </Link>
           </div>
@@ -341,7 +341,7 @@ export default function DashboardPage() {
               {recentCourses.map((c) => (
                 <li key={c.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
-                    <span className="rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                    <span className="rounded-lg border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
                       {c.courseCode}
                     </span>
                     <span className="font-medium text-slate-800">{c.title}</span>

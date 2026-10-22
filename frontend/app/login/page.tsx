@@ -10,6 +10,7 @@ import { getErrorMessage, getFieldErrors } from "@/lib/api";
 import { card, fieldInputClass, primaryBtn } from "@/lib/theme";
 import Field from "@/components/Field";
 import { FieldErrors, firstError, required } from "@/lib/validation";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const { user, ready, login } = useAuth();
@@ -76,15 +77,14 @@ export default function LoginPage() {
             onChange={(e) => setUsername(e.target.value)}
           />
         </Field>
-        <Field label="Password" error={errors.password}>
-          <input
-            className={fieldInputClass(errors.password)}
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+       <Field label="Password" error={errors.password}>
+              <PasswordInput
+                className={fieldInputClass(errors.password)}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
         </Field>
         <button type="submit" disabled={submitting} className={`${primaryBtn} w-full py-2.5`}>
           {submitting ? "Signing in..." : "Sign in"}
